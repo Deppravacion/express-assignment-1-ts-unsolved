@@ -55,28 +55,28 @@ app.delete("/dogs/:id", async (req, res) => {
 });
 
 //### Error Checking
-function errorAgeCheck(age: number) {
+function errorCheckAge(age: number) {
   if (typeof age !== "number") {
     return "age should be a number";
   }
   return null;
 }
 
-function errorNameCheck(name: string) {
+function errorCheckName(name: string) {
   if (typeof name !== "string") {
     return "name should be a string";
   }
   return null;
 }
 
-function errorBreedCheck(breed: string) {
+function errorCheckBreed(breed: string) {
   if (typeof breed !== "string") {
     return "breed should be a string";
   }
   return null;
 }
 
-function errorDescriptionCheck(description: string) {
+function errorCheckDescription(description: string) {
   if (typeof description !== "string") {
     return "description should be a string";
   }
@@ -88,11 +88,11 @@ app.post("/dogs", async (req, res) => {
   console.log("Received request:", req.body);
 
   const { name, age, breed, description } = req.body;
-  const ageError = errorAgeCheck(age);
-  const nameError = errorNameCheck(name);
-  const breedError = errorBreedCheck(breed);
+  const ageError = errorCheckAge(age);
+  const nameError = errorCheckName(name);
+  const breedError = errorCheckBreed(breed);
   const descriptionError =
-    errorDescriptionCheck(description);
+    errorCheckDescription(description);
 
   const validProperties = [
     "name",
