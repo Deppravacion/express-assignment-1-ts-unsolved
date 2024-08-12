@@ -54,44 +54,39 @@ app.delete("/dogs/:id", async (req, res) => {
   return res.json(dog).status(200);
 });
 
-//### Create Endpoint
-
-const errorAgeCheck = (
-  age: number | string | null | undefined
-) => {
+//### Error Checking
+function errorAgeCheck(age: number) {
   if (typeof age !== "number") {
-    return "AGE should be a number";
+    return "age should be a number";
   }
   return null;
-};
+}
 
-const errorNameCheck = (
-  name: number | string | null | undefined
-) => {
+function errorNameCheck(name: string) {
   if (typeof name !== "string") {
-    return " NAME should be a string";
+    return "name should be a string";
   }
   return null;
-};
+}
 
-const errorBreedCheck = (
-  breed: number | string | null | undefined
-) => {
+function errorBreedCheck(breed: string) {
   if (typeof breed !== "string") {
-    return "BREED should be a string";
+    return "breed should be a string";
   }
   return null;
-};
+}
 
-const errorDescriptionCheck = (
-  description: number | string | null | undefined
-) => {
+function errorDescriptionCheck(description: string) {
   if (typeof description !== "string") {
-    return "DESCRIPTION should be a string";
+    return "description should be a string";
   }
-};
+  return null;
+}
 
+//## CREATE Endpoint
 app.post("/dogs", async (req, res) => {
+  console.log("Received request:", req.body);
+
   const { name, age, breed, description } = req.body;
   const ageError = errorAgeCheck(age);
   const nameError = errorNameCheck(name);
@@ -99,27 +94,62 @@ app.post("/dogs", async (req, res) => {
   const descriptionError =
     errorDescriptionCheck(description);
 
-  const properties = [
+  const validProperties = [
     "name",
     "age",
     "breed",
     "description",
   ];
   const invalidProperties = [];
-  for (const property in req.body) {
-    if (!properties.includes(property)) {
-      invalidProperties.push(property);
+
+  for (const key in req.body) {
+    if (!validProperties.includes(key)) {
+      invalidProperties.push(key);
     }
   }
 
   if (invalidProperties.length > 0) {
+    // console.log("Invalid properties:", invalidProperties);
     return res.status(400).send({
       errors: invalidProperties.map(
-        (key) => `"${key}" is not a valid key.`
+        (key) => `'${key}' is not a valid key`
       ),
     });
   }
 
+  // const errors = [];
+
+  // if (ageError !== null) {
+  //   errors.push(ageError);
+  // }
+  // if (breedError !== null) {
+  //   errors.push(breedError);
+  // }
+  // if (nameError !== null) {
+  //   errors.push(nameError);
+  // }
+  // if (descriptionError !== null) {
+  //   errors.push(descriptionError);
+  // }
+
+  // try {
+  //   console.log("Creating dog in database...");
+  //   const createDog = await prisma.dog.create({
+  //     data: {
+  //       name,
+  //       age,
+  //       breed,
+  //       description,
+  //     },
+  //   });
+  //   console.log("Dog created:", createDog);
+  //   res.status(201).send(createDog);
+  // } catch (error) {
+  //   console.error("Database error:", error);
+  //   res
+  //     .status(500)
+  //     .send({ error: "Internal Server Error" });
+  // }
   const errors = [];
 
   if (ageError !== null) {
@@ -135,18 +165,30 @@ app.post("/dogs", async (req, res) => {
     errors.push(descriptionError);
   }
 
+  if (errors.length > 0) {
+    return res.status(400).send({ errors });
+  }
+
   try {
+    const dogData = {
+      name,
+      age,
+      breed,
+      description,
+    };
+
     const createDog = await prisma.dog.create({
-      data: {
-        name,
-        age,
-        breed,
-        description,
-      },
+      data: dogData,
     });
     res.status(201).send(createDog);
-  } catch (error) {}
+  } catch (error) {
+    console.error("Database error:", error);
+    res
+      .status(500)
+      .send({ error: "Internal Server Error" });
+  }
 });
+//left off here ^^  use postman to check functionality etc.
 
 // all your code should go above this line
 app.use(errorHandleMiddleware);
