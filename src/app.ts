@@ -109,7 +109,6 @@ app.post("/dogs", async (req, res) => {
   }
 
   if (invalidProperties.length > 0) {
-    // console.log("Invalid properties:", invalidProperties);
     return res.status(400).send({
       errors: invalidProperties.map(
         (key) => `'${key}' is not a valid key`
@@ -117,39 +116,6 @@ app.post("/dogs", async (req, res) => {
     });
   }
 
-  // const errors = [];
-
-  // if (ageError !== null) {
-  //   errors.push(ageError);
-  // }
-  // if (breedError !== null) {
-  //   errors.push(breedError);
-  // }
-  // if (nameError !== null) {
-  //   errors.push(nameError);
-  // }
-  // if (descriptionError !== null) {
-  //   errors.push(descriptionError);
-  // }
-
-  // try {
-  //   console.log("Creating dog in database...");
-  //   const createDog = await prisma.dog.create({
-  //     data: {
-  //       name,
-  //       age,
-  //       breed,
-  //       description,
-  //     },
-  //   });
-  //   console.log("Dog created:", createDog);
-  //   res.status(201).send(createDog);
-  // } catch (error) {
-  //   console.error("Database error:", error);
-  //   res
-  //     .status(500)
-  //     .send({ error: "Internal Server Error" });
-  // }
   const errors = [];
 
   if (ageError !== null) {
@@ -188,7 +154,6 @@ app.post("/dogs", async (req, res) => {
       .send({ error: "Internal Server Error" });
   }
 });
-//left off here ^^  use postman to check functionality etc.
 
 // all your code should go above this line
 app.use(errorHandleMiddleware);
