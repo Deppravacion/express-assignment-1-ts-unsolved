@@ -20,15 +20,20 @@ app.get("/dogs", async (_req, res) => {
 // Show Endpoint
 app.get("/dogs/:id", async (req, res) => {
   const id = +req.params.id;
+  if (isNaN(id)) {
+    return res
+      .status(400)
+      .send({ message: "id should be a number" });
+  }
   const dog = await prisma.dog.findUnique({
     where: {
       id,
     },
   });
   if (!dog) {
-    return res.status(404).send(" No Dog - No Content");
+    return res.status(204).send();
   }
-  return res.json(dog).status(200);
+  return res.status(200).json(dog);
 });
 
 //### Delete Endpoint
@@ -38,7 +43,7 @@ app.delete("/dogs/:id", async (req, res) => {
   if (isNaN(id)) {
     return res
       .status(400)
-      .send({ message: "the ID should be a number." });
+      .send({ message: "id should be a number" });
   }
   const dog = await prisma.dog.findUnique({
     where: { id },
@@ -152,6 +157,52 @@ app.post("/dogs", async (req, res) => {
     res
       .status(500)
       .send({ error: "Internal Server Error" });
+  }
+});
+
+//### Update Endpoint
+
+app.patch("/dogs/:id", async (req, res) => {
+  const body = req.body;
+  const id = +req?.params?.id;
+  const name = req?.body?.name;
+  const age = req?.body?.age;
+  const description = req?.body?.description;
+  const breed = req?.body?.breed;
+
+  const validProperties = [
+    "name",
+    "age",
+    "breed",
+    "description",
+  ];
+  const invalidProperties = [];
+
+  for (const key in req.body) {
+    if (!validProperties.includes(key)) {
+      invalidProperties.push(key);
+    }
+  }
+
+  if (invalidProperties.length > 0) {
+    return res.status(400).send({
+      errors: invalidProperties.map(
+        (key) => `'${key}' is not a valid key`
+      ),
+    });
+  }
+
+  try {
+    const updatedDog = await prisma.dog.update({
+      where: { id },
+      data: { name, age, breed, description },
+    });
+    return res.status(201).json(updatedDog);
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .send({ error: "Database Error" });
   }
 });
 
