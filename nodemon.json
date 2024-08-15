@@ -1,5 +1,6 @@
+
 {
-  "watch": ["src"],
-  "ext": "ts",
-  "exec": "ts-node ./src/app.ts"
+  "watch": ["src", "noodling.zod.ts"],
+  "ext": "ts", 
+  "exec": "ts-node noodling.zod.ts"
 }
