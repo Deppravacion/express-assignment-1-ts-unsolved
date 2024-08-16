@@ -1,6 +1,9 @@
-
 {
-  "watch": ["src", "noodling.zod.ts"],
-  "ext": "ts", 
-  "exec": "ts-node noodling.zod.ts"
+  "watch": ["src"],
+  "ext": "ts",
+  "exec": "ts-node ./src/app.ts",
+  "_comment-note": "the below code was from zod lessons- one does not simply comment in json",
+  "_commented-watch": ["src", "noodling.zod.ts"],
+  "_commented-ext": "ts", 
+  "_commented-exec": "ts-node noodling.zod.ts"
 }
