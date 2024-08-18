@@ -13,10 +13,21 @@ app.get("/", (_req, res) => {
 });
 
 //### Get (/dogs) Index endpoint
-app.get("/dogs", async (_req, res) => {
-  const dogs = await prisma.dog.findMany();
-  res.status(200).send(dogs);
-});
+app.get(
+  "/dogs",
+  validateRequest({
+    params: z
+      .object({
+        id: z.string(),
+      })
+      .strict()
+      .partial(),
+  }),
+  async (_req, res) => {
+    const dogs = await prisma.dog.findMany();
+    res.status(200).send(dogs);
+  }
+);
 
 // Show Endpoint
 app.get("/dogs/:id", async (req, res) => {
