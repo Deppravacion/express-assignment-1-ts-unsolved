@@ -1,103 +1,90 @@
 import express from "express";
 import { prisma } from "../prisma/prisma-instance";
-import { errorHandleMiddleware } from "./error-handler";
+import {
+  errorHandleMiddleware,
+  validateReqId,
+} from "./error-handler";
 import "express-async-errors";
-// import { stringify } from "querystring";
+import HttpStatusCode from "./status-codes";
+
+const {
+  OK,
+  CREATED,
+  NO_CONTENT,
+  BAD_REQUEST,
+  INTERNAL_SERVER_ERROR,
+} = HttpStatusCode;
 
 const app = express();
 app.use(express.json());
 // All code should go below this line
 app.get("/", (_req, res) => {
-  res.json({ message: "Hello World!" }).status(200);
+  res.json({ message: "Hello World!" }).status(OK);
 });
 
 //### Get (/dogs) Index endpoint
 app.get("/dogs", async (_req, res) => {
   const dogs = await prisma.dog.findMany();
-  res.status(200).send(dogs);
+  res.status(OK).send(dogs);
 });
 
 // Show Endpoint
-app.get("/dogs/:id", async (req, res) => {
+app.get("/dogs/:id", validateReqId, async (req, res) => {
   const id = +req.params.id;
-  if (isNaN(id)) {
-    return res
-      .status(400)
-      .send({ message: "id should be a number" });
-  }
   const dog = await prisma.dog.findUnique({
     where: {
       id,
     },
   });
   if (!dog) {
-    return res.status(204).send();
+    return res.sendStatus(NO_CONTENT);
   }
-  return res.status(200).json(dog);
+  return res.status(OK).json(dog);
 });
 
 //### Delete Endpoint
 
-app.delete("/dogs/:id", async (req, res) => {
+app.delete("/dogs/:id", validateReqId, async (req, res) => {
   const id = +req.params.id;
-  if (isNaN(id)) {
-    return res
-      .status(400)
-      .send({ message: "id should be a number" });
-  }
-  const dog = await prisma.dog.findUnique({
-    where: { id },
-  });
-  if (dog === null) {
-    return res.status(204).send({
-      message: " Could not find a dog with that ID",
+  await prisma.dog
+    .delete({
+      where: { id },
+    })
+    .then((dog) => {
+      return res.json(dog).status(OK);
+    })
+    .catch(() => {
+      return res.sendStatus(NO_CONTENT);
     });
-  }
-  await prisma.dog.delete({
-    where: { id },
-  });
-  return res.json(dog).status(200);
 });
 
 //### Error Checking
-function errorCheckAge(age: number) {
+
+function errorcheckProperties(
+  age: string,
+  name: string,
+  breed: string,
+  description: string
+) {
+  const errors = [];
   if (typeof age !== "number") {
-    return "age should be a number";
+    errors.push("age should be a number");
   }
-  return null;
-}
-
-function errorCheckName(name: string) {
   if (typeof name !== "string") {
-    return "name should be a string";
+    errors.push("name should be a string");
   }
-  return null;
-}
-
-function errorCheckBreed(breed: string) {
   if (typeof breed !== "string") {
-    return "breed should be a string";
+    errors.push("breed should be a string");
   }
-  return null;
-}
-
-function errorCheckDescription(description: string) {
   if (typeof description !== "string") {
-    return "description should be a string";
+    errors.push("description should be a string");
   }
-  return null;
+  return errors;
 }
 
 //## CREATE Endpoint
 app.post("/dogs", async (req, res) => {
-  console.log("Received request:", req.body);
-
   const { name, age, breed, description } = req.body;
-  const ageError = errorCheckAge(age);
-  const nameError = errorCheckName(name);
-  const breedError = errorCheckBreed(breed);
-  const descriptionError =
-    errorCheckDescription(description);
 
   const validProperties = [
     "name",
@@ -114,30 +101,22 @@ app.post("/dogs", async (req, res) => {
   }
 
   if (invalidProperties.length > 0) {
-    return res.status(400).send({
+    return res.status(BAD_REQUEST).send({
       errors: invalidProperties.map(
         (key) => `'${key}' is not a valid key`
       ),
     });
   }
 
-  const errors = [];
-
-  if (ageError !== null) {
-    errors.push(ageError);
-  }
-  if (breedError !== null) {
-    errors.push(breedError);
-  }
-  if (nameError !== null) {
-    errors.push(nameError);
-  }
-  if (descriptionError !== null) {
-    errors.push(descriptionError);
-  }
+  const errors = errorcheckProperties(
+    age,
+    name,
+    breed,
+    description
+  );
 
   if (errors.length > 0) {
-    return res.status(400).send({ errors });
+    return res.status(BAD_REQUEST).send({ errors });
   }
 
   try {
@@ -151,25 +130,20 @@ app.post("/dogs", async (req, res) => {
     const createDog = await prisma.dog.create({
       data: dogData,
     });
-    res.status(201).send(createDog);
+    res.status(CREATED).send(createDog);
   } catch (error) {
     console.error("Database error:", error);
     res
-      .status(500)
+      .status(INTERNAL_SERVER_ERROR)
       .send({ error: "Internal Server Error" });
   }
 });
 
 //### Update Endpoint
 
-app.patch("/dogs/:id", async (req, res) => {
-  const body = req.body;
+app.patch("/dogs/:id", validateReqId, async (req, res) => {
+  const { name, age, breed, description } = req.body;
   const id = +req?.params?.id;
-  const name = req?.body?.name;
-  const age = req?.body?.age;
-  const description = req?.body?.description;
-  const breed = req?.body?.breed;
-
   const validProperties = [
     "name",
     "age",
@@ -185,7 +159,7 @@ app.patch("/dogs/:id", async (req, res) => {
   }
 
   if (invalidProperties.length > 0) {
-    return res.status(400).send({
+    return res.status(BAD_REQUEST).send({
       errors: invalidProperties.map(
         (key) => `'${key}' is not a valid key`
       ),
@@ -197,11 +171,11 @@ app.patch("/dogs/:id", async (req, res) => {
       where: { id },
       data: { name, age, breed, description },
     });
-    return res.status(201).json(updatedDog);
+    return res.status(CREATED).json(updatedDog);
   } catch (error) {
     console.error(error);
     return res
-      .status(500)
+      .status(INTERNAL_SERVER_ERROR)
       .send({ error: "Database Error" });
   }
 });

@@ -9,3 +9,16 @@ export const errorHandleMiddleware = (
   console.error(err.stack);
   res.status(500).send("Something broke!");
 };
+
+export const validateReqId = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.params.id || !Number(req.params.id)) {
+    return res
+      .status(400)
+      .send({ message: "id should be a number" });
+  }
+  next();
+};
