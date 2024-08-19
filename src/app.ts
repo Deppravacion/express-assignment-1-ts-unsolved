@@ -96,15 +96,13 @@ app.post("/dogs", async (req, res) => {
 
   for (const key in req.body) {
     if (!validProperties.includes(key)) {
-      invalidProperties.push(key);
+      invalidProperties.push(`'${key}' is not a valid key`);
     }
   }
 
   if (invalidProperties.length > 0) {
     return res.status(BAD_REQUEST).send({
-      errors: invalidProperties.map(
-        (key) => `'${key}' is not a valid key`
-      ),
+      errors: invalidProperties,
     });
   }
 
