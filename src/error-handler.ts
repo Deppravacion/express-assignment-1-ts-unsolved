@@ -1,4 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import HttpStatusCode from "./status-codes";
+
+const { BAD_REQUEST, INTERNAL_SERVER_ERROR } =
+  HttpStatusCode;
 
 export const errorHandleMiddleware = (
   err: Error,
@@ -7,7 +11,9 @@ export const errorHandleMiddleware = (
   _next: NextFunction
 ) => {
   console.error(err.stack);
-  res.status(500).send("Something broke!");
+  res
+    .status(INTERNAL_SERVER_ERROR)
+    .send("Something broke!");
 };
 
 export const validateReqId = (
@@ -17,7 +23,7 @@ export const validateReqId = (
 ) => {
   if (!req.params.id || !Number(req.params.id)) {
     return res
-      .status(400)
+      .status(BAD_REQUEST)
       .send({ message: "id should be a number" });
   }
   next();

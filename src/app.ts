@@ -92,7 +92,7 @@ app.post("/dogs", async (req, res) => {
     "breed",
     "description",
   ];
-  const invalidProperties = [];
+  const invalidProperties: string[] = [];
 
   for (const key in req.body) {
     if (!validProperties.includes(key)) {
